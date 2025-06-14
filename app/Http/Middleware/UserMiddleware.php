@@ -18,7 +18,7 @@ class UserMiddleware
         
         // Redirect unauthorized users
         Auth::logout();
-        return redirect('/')->with('error', 'Access denied.');
+        return redirect('/')->with('error', 'please login!!.');
         
         
          
