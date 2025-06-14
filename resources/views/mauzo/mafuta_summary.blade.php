@@ -1,9 +1,8 @@
 @extends('layouts.appw')
+
 @section('content')
 <div class="container">
-    <h4
-        style="text-align: center; color: #3490dc; font-family: 'Arial', sans-serif; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
-        Sales Records</h4>
+    <h4 class="text-center mb-4 text-primary fw-bold">Mafuta Sales Records</h4> {{-- Hardcoded title for Mafuta --}}
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -13,8 +12,8 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="row">
-
+    <div class="row mb-3">
+       
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
                 All Sales
@@ -47,7 +46,8 @@
         </div>
     </div>
 
-    <form action="{{ route('mauzo.index') }}" method="GET" class="row gx-2 gy-2 align-items-center mb-3">
+    {{-- Filter Form --}}
+    <form action="{{ route('mauzo.mafuta_summary') }}" method="GET" class="row gx-2 gy-2 align-items-center mb-3"> {{-- Form action points to its own route --}}
         <div class="col-md-auto">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-filter"></i></span>
@@ -77,37 +77,22 @@
             </div>
         </div>
         <div class="col-md-auto">
-
             <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                <select name="payment_id" id="payment_method_id" class="form-select" required>
-                    <option value="">All Payment Method </option>
+                <span class="input-group-text"><i class="fas fa-money-bill-alt"></i></span>
+                <select name="payment_id" id="payment_id" class="form-select">
+                    <option value="">All Payment Ways</option>
                     @foreach($paymentMethods as $method)
-                    <option value="{{ $method->payment_id }}" data-name="{{ $method->name }}"
-                        {{ old('payment_id') == $method->payment_id ? 'selected' : '' }}>
-                        {{ $method->name }}
+                    <option value="{{ $method->id }}" {{ request('payment_id') == $method->id ? 'selected' : '' }}>
+                        {{ $method->method_name }}
                     </option>
                     @endforeach
                 </select>
-                @error('payment_id')
-                <span class="text-danger">{{ $message }}</span>
-                @enderror
             </div>
         </div>
-        <div class="col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-tags"></i></span>
-                <select name="sells_type" id="sells_type" class="form-select">
-                    <option value="">All Sales Types</option>
-                    <option value="jumla" {{ request('sells_type') == 'jumla' ? 'selected' : '' }}>Jumla</option>
-                    <option value="rejareja" {{ request('sells_type') == 'rejareja' ? 'selected' : '' }}>Rejareja
-                    </option>
-                </select>
-            </div>
-        </div>
+
         <div class="col-md-auto">
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-            <a href="{{ route('mauzo.index') }}" class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</a>
+            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</a> {{-- Reset button points to its own route --}}
         </div>
     </form>
 
@@ -116,67 +101,46 @@
             <thead>
                 <tr>
                     <th>S/N</th>
-                    <th>User Name</th>
+                    <th>User_Name</th>
                     <th>Date</th>
                     <th>Batch_No.</th>
                     <th>Product</th>
-                    <th>Quantity(Lts)</th>
+                    <th>Quantity</th>
                     <th>Price_(TZS)</th>
                     <th>Discount_(TZS)</th>
-                    <th>Total Price_(TZS)</th>
-                    <th>Payment Ways</th>
-                    <th>Sales type</th>
-                    <th>Payment Status</th>
-                    <th>Sales Status</th>
+                    <th>Total_Price_(TZS)</th>
+                    <th>Payment_Method</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($mauzoRecords as $mauzoItem)
+                @forelse($mauzo as $sale) {{-- This loop uses $mauzo (unpaginated) --}}
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $mauzoItem->user->first_name }}
-                        @if($mauzoItem->user->middle_name)
-                        {{ $mauzoItem->user->last_name }}
-                        @endif
-                    </td>
-                    <td>{{ $mauzoItem->tarehe }}</td>
-                    <td>{{ $mauzoItem->alizeti->batch_no }}</td>
-                    <td>{{ $mauzoItem->product->name }}</td>
-                    <td>{{ $mauzoItem->quantity }}</td>
-                    <td>{{ number_format($mauzoItem->price, 0) }}</td>
-                    <td>{{ number_format($mauzoItem->discount, 0) }}</td>
-                    <td>{{ number_format($mauzoItem->total_price, 0) }}</td>
+                    <td>{{ $sale->user->first_name ?? '' }} {{ $sale->user->last_name ?? '' }}</td>
+                    <td>{{ $sale->tarehe }}</td>
+                    <td>{{ $sale->alizeti->batch_no  }}</td>
+                    <td>{{ $sale->product->name}}</td>
+                    <td>{{ number_format($sale->quantity, 2) }}</td>
+                    <td>{{ number_format($sale->price, 0) }}</td>
+                    <td>{{ number_format($sale->discount, 0) }}</td>
+                    <td>{{ number_format($sale->total_price, 0) }}</td>
+                    <td>{{ $sale->paymentMethod->name }}</td>
                     <td>
-                        {{-- Attempt to display payment method name instead of ID --}}
-                        {{ $mauzoItem->paymentMethod ? $mauzoItem->paymentMethod->name : 'N/A' }}
-                    </td>
-                    <td>{{ $mauzoItem->sells_type}}</td>
-                    <td>
-                        {{-- Display Payment Status with badges --}}
-                        @if ($mauzoItem->payment_status == 'payed')
-                        <span class="badge bg-success">Payed</span>
-                        @elseif ($mauzoItem->payment_status == 'not payed')
-                        <span class="badge bg-warning text-dark">Not Payed</span>
-                        @else
-                        {{ $mauzoItem->payment_status }} {{-- Fallback if status is neither expected value --}}
-                        @endif
-                    </td>
-                    <td>
-                        {{-- Display Confirmation Status --}}
-                        @if ($mauzoItem->is_confirmed)
-                        <span class="badge bg-success">Sold</span>
+                        @if ($sale->is_confirmed)
+                        <span class="badge bg-success">sold</span>
                         @else
                         <span class="badge bg-warning text-dark">Pending</span>
                         @endif
                     </td>
                     <td>
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            @if (!$mauzoItem->is_confirmed)
-                            <a href="{{ route('mauzo.edit', $mauzoItem->mauzo_id) }}" class="btn btn-sm btn-primary">
+                        <div class="d-flex align-items-center gap-2">
+                            @if (!$sale->is_confirmed)
+                            <a href="{{ route('mauzo.edit', $sale->mauzo_id) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('mauzo.destroy', $mauzoItem->mauzo_id) }}" method="POST"
+                            <form action="{{ route('mauzo.destroy', $sale->mauzo_id) }}" method="POST"
                                 class="d-inline delete-form">
                                 @csrf
                                 @method('DELETE')
@@ -184,7 +148,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
-                            <form action="{{ route('mauzo.confirm', $mauzoItem->mauzo_id) }}" method="POST"
+                            <form action="{{ route('mauzo.confirm', $sale->mauzo_id) }}" method="POST"
                                 class="d-inline confirm-form">
                                 @csrf
                                 <button type="button" class="btn btn-sm btn-info confirm-btn">
@@ -197,22 +161,28 @@
                         </div>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="12" class="text-center">No sales records found for Mafuta.</td>
+                    </tr>
+                @endforelse
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="5">Total:</td>
-                    <td>{{ $mauzoRecords->sum('quantity') }} Lts</td>
+                    <td colspan="5">Totals:</td>
+                    <td>{{ number_format($totalQuantity, 2) }}</td>
                     <td colspan="2"></td>
-                    <td>{{ number_format($mauzoRecords->sum('total_price'), 0) }} TZS</td>
-                    <td colspan="4"></td> 
+                    <td>{{ number_format($totalSalesPrice, 0) }} TZS</td>
+                    <td colspan="4"></td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
     </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const deleteForms = document.querySelectorAll('.delete-form');
@@ -244,8 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: "Are you sure you want to confirm this sale? This will update the stock.",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#17a2b8',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#17a2b8', // Bootstrap info color
+                cancelButtonColor: '#6c757d', // Bootstrap secondary color
                 confirmButtonText: 'Yes, confirm it!'
             }).then((result) => {
                 if (result.isConfirmed) {

@@ -2,9 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h4
-        style="text-align: center; color: #3490dc; font-family: 'Arial', sans-serif; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
-        Mashudu Sales Records</h4>
+    <h4 class="text-center mb-4 text-primary fw-bold">Mashudu Sales Records</h4>
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -14,22 +12,41 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="row">
+    {{-- Navigation buttons for all sales views --}}
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
-                Mafuta Summary
+                All Sales
+            </a>
+        </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-auto mb-3">
+            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-info w-100 w-md-auto">
+                Mafuta Sales
             </a>
         </div>
 
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-primary w-100 w-md-auto">
-                Mashudu Summary
+                Mashudu sales
+            </a>
+        </div>
+        
+        <div class="col-12 col-md-auto mb-3">
+            <a href="{{ route('mauzo.ugido_summary') }}" class="btn btn-warning w-100 w-md-auto">
+                Ugido Sales
+            </a>
+        </div>
+
+        <div class="col-12 col-md-auto mb-3">
+            <a href="{{ route('mauzo.lami_summary') }}" class="btn btn-dark w-100 w-md-auto">
+                Lami Sales
             </a>
         </div>
 
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.create') }}" class="btn btn-success w-100 w-md-auto">
-                <i class="fas fa-plus"></i> Add New Mauzo
+                <i class="fas fa-plus"></i> Add New Record
             </a>
         </div>
     </div>
@@ -41,8 +58,8 @@
                 <select name="alizeti_id" id="alizeti_id" class="form-select">
                     <option value="">All Batches</option>
                     @foreach($alizeti as $batch)
-                    <option value="{{ $batch->alizeti_id }}"
-                        {{ request('alizeti_id') == $batch->alizeti_id ? 'selected' : '' }}>
+                    <option value="{{ $batch->ali_id }}"
+                        {{ request('alizeti_id') == $batch->ali_id ? 'selected' : '' }}>
                         {{ $batch->batch_no }}
                     </option>
                     @endforeach
@@ -66,19 +83,20 @@
         <div class="col-md-auto">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-money-bill-alt"></i></span>
-                <select name="payment_way" id="payment_way" class="form-select">
+                <select name="payment_id" id="payment_id" class="form-select">
                     <option value="">All Payment Ways</option>
-                    <option value="cash" {{ request('payment_way') == 'cash' ? 'selected' : '' }}>Cash</option>
-                    <option value="Lipa_namba" {{ request('payment_way') == 'Lipa_namba' ? 'selected' : '' }}>Lipa Namba
+                    @foreach($paymentMethods as $method)
+                    <option value="{{ $method->id }}" {{ request('payment_id') == $method->id ? 'selected' : '' }}>
+                        {{ $method->method_name }}
                     </option>
+                    @endforeach
                 </select>
             </div>
         </div>
 
         <div class="col-md-auto">
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-            <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i>
-                Reset</a>
+            <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</a>
         </div>
     </form>
 
@@ -90,31 +108,39 @@
                     <th>User_Name</th>
                     <th>Date</th>
                     <th>Batch_No.</th>
-                    <th>Mashudu_(KG)</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
                     <th>Price_(TZS)</th>
                     <th>Discount_(TZS)</th>
                     <th>Total_Price_(TZS)</th>
                     <th>Payment_Method</th>
-                    <th>Status</th>
+                    <th>Payment Status</th>
+                    <th>Sales Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($mauzo as $sale)
+                @forelse($mauzo as $sale)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $sale->user->first_name }}
-                        @if($sale->user->middle_name)
-                        {{ $sale->user->last_name }}
-                        @endif
-                    </td>
+                    <td>{{ $sale->user->first_name ?? '' }} {{ $sale->user->last_name ?? '' }}</td>
                     <td>{{ $sale->tarehe }}</td>
-                    <td>{{ $sale->alizeti->batch_no }}</td>
-                    <td>{{ $sale->quantity }}</td>
+                    <td>{{ $sale->alizeti->batch_no ?? 'N/A' }}</td>
+                    <td>{{ $sale->product->name}}</td>
+                    <td>{{ number_format($sale->quantity, 2) }}</td>
                     <td>{{ number_format($sale->price, 0) }}</td>
                     <td>{{ number_format($sale->discount, 0) }}</td>
                     <td>{{ number_format($sale->total_price, 0) }}</td>
-                    <td>{{ $sale->payment_way }}</td>
+                    <td>{{ $sale->paymentMethod->name }}</td>
+                    <td>
+                        {{-- Display Payment Status with badges --}}
+                        @if ($sale->payment_status == 'payed')
+                        <span class="badge bg-success">Payed</span>
+                        @elseif ($sale->payment_status == 'not payed')
+                        <span class="badge bg-warning text-dark">Not Payed</span>
+                        @else
+                        {{ $sale->payment_status }} 
+                        @endif
                     <td>
                         @if ($sale->is_confirmed)
                         <span class="badge bg-success">sold</span>
@@ -123,7 +149,7 @@
                         @endif
                     </td>
                     <td>
-                        <div style="display: flex; align-items: center; gap: 5px;">
+                        <div class="d-flex align-items-center gap-2">
                             @if (!$sale->is_confirmed)
                             <a href="{{ route('mauzo.edit', $sale->mauzo_id) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i>
@@ -149,21 +175,27 @@
                         </div>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="12" class="text-center">No sales records found for this product.</td>
+                    </tr>
+                @endforelse
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4">Totals:</td>
-                    <td>{{ $totalMashuduQuantity }} KG</td>
+                    <td colspan="5">Totals:</td>
+                    <td>{{ number_format($totalQuantity, 2) }}</td>
                     <td colspan="2"></td>
-                    <td>{{ number_format($totalMashuduSalesPrice, 0) }} TZS</td>
-                    <td colspan="3"></td>
+                    <td>{{ number_format($totalSalesPrice, 0) }} TZS</td>
+                    <td colspan="5"></td>
+                    <!-- <td></td> -->
                 </tr>
             </tfoot>
         </table>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const deleteForms = document.querySelectorAll('.delete-form');
@@ -195,8 +227,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: "Are you sure you want to confirm this sale? This will update the stock.",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#17a2b8',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#17a2b8', // Bootstrap info color
+                cancelButtonColor: '#6c757d', // Bootstrap secondary color
                 confirmButtonText: 'Yes, confirm it!'
             }).then((result) => {
                 if (result.isConfirmed) {

@@ -29,6 +29,10 @@ class MauzoController extends Controller
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $mauzo->whereBetween('tarehe', [$request->start_date, $request->end_date]);
         }
+        if ($request->filled('payment_id')) {
+            $mauzo->where('payment_id', $request->payment_id);
+        }
+
         $mauzo->orderBy('created_at', 'desc');
         $mauzoRecords = $mauzo->paginate(10);
         $alizeti = Alizeti::with('stock')->get(); 
@@ -36,7 +40,106 @@ class MauzoController extends Controller
         $paymentMethods = PaymentMethod::all();
         return view('mauzo.index', compact('mauzoRecords', 'alizeti', 'products', 'paymentMethods'));
     }
+
+    public function mafutaSummary(Request $request)
+    {
+        $productName = 'Mafuta';
+        $pageTitle = 'Mafuta Sales Records';
+        $currentRoute = 'mauzo.mafuta_summary';
+
+        $data = $this->getSalesSummaryData($request, $productName, $pageTitle, $currentRoute);
+        return view('mauzo.mafuta_summary', $data);
+    }
+
     
+    public function mashuduSummary(Request $request)
+    {
+        $productName = 'Mashudu';
+        $pageTitle = 'Mashudu Sales Records';
+        $currentRoute = 'mauzo.mashudu_summary';
+
+        $data = $this->getSalesSummaryData($request, $productName, $pageTitle, $currentRoute);
+        return view('mauzo.mashudu_summary', $data);
+    }
+
+    
+    public function ugidoSummary(Request $request)
+    {
+        $productName = 'Ugido';
+        $pageTitle = 'Ugido Sales Records';
+        $currentRoute = 'mauzo.ugido_summary';
+
+        $data = $this->getSalesSummaryData($request, $productName, $pageTitle, $currentRoute);
+        return view('mauzo.ugido_summary', $data);
+    }
+
+    
+    public function lamiSummary(Request $request)
+    {
+        $productName = 'Lami';
+        $pageTitle = 'Lami Sales Records';
+        $currentRoute = 'mauzo.lami_summary';
+
+        $data = $this->getSalesSummaryData($request, $productName, $pageTitle, $currentRoute);
+        return view('mauzo.lami_summary', $data);
+    }
+
+    
+    private function getSalesSummaryData(Request $request, string $productName, string $pageTitle, string $currentRoute): array
+    {
+        $mauzoQuery = Mauzo::with(['product', 'user', 'alizeti', 'paymentMethod'])
+                            ->whereHas('product', function ($query) use ($productName) {
+                                $query->where('name', $productName);
+                            })
+                            ->latest();
+
+        if ($request->has('alizeti_id') && $request->alizeti_id != '') {
+            $mauzoQuery->where('alizeti_id', $request->alizeti_id);
+        }
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+
+            if ($startDate > $endDate) {
+                Log::warning('Start date cannot be after end date for ' . $productName . ' summary.');
+                return [
+                    'mauzo' => collect(),
+                    'alizeti' => Alizeti::all(),
+                    'paymentMethods' => PaymentMethod::all(),
+                    'totalQuantity' => 0,
+                    'totalSalesPrice' => 0,
+                    'pageTitle' => $pageTitle,
+                    'currentRoute' => $currentRoute,
+                    'error' => 'Start date cannot be after end date.'
+                ];
+            }
+            $mauzoQuery->whereBetween('tarehe', [$startDate, $endDate]);
+        }
+
+        if ($request->has('payment_id') && $request->payment_id != '') {
+            $mauzoQuery->where('payment_id', $request->payment_id);
+        }
+
+        $mauzo = $mauzoQuery->get();
+
+        $totalQuantity = $mauzo->sum('quantity');
+        $totalSalesPrice = $mauzo->sum('total_price');
+
+        $alizeti = Alizeti::all();
+        $paymentMethods = PaymentMethod::all();
+
+        return compact(
+            'mauzo',
+            'alizeti',
+            'paymentMethods',
+            'totalQuantity',
+            'totalSalesPrice',
+            'pageTitle',
+            'currentRoute'
+        );
+    }
+
     public function create()
     {
         $alizeti = Alizeti::with('stock')->get();
