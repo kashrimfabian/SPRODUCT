@@ -30,6 +30,7 @@ class StockController extends Controller
             'mafuta_machafu' => 'required|numeric|min:0',
             'ugido'=>'required|numeric|min:0',
             'lami'=>'required|numeric|min:0',
+            'cleaned_kgm'=>'required|numeric|min:0',
         ]);
 
         Stock::create($validatedData);
@@ -59,6 +60,7 @@ class StockController extends Controller
             'mafuta_machafu' => 'required|numeric|min:0',
             'ugido'=>'required|numeric|min:0',
             'lami'=>'required|numeric|min:0',
+            'cleaned_kgm'=>'required|numeric|min:0',
         ]);
 
         $stock->update($validatedData);

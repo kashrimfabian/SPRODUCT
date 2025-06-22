@@ -107,7 +107,7 @@
             }
         }
 
-        updateAvailableKg(); // Initialize on page load
+        updateAvailableKg(); 
 
         alizetiSelect.addEventListener('change', updateAvailableKg);
     });

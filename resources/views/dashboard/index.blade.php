@@ -212,7 +212,7 @@
             <h5 class="mb-3 text-secondary"><i class="fas fa-chart-line me-2"></i>Recent Sales Activities</h5>
         </div>
         
-        <!-- Recent Mafuta Sales -->
+        
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header"> {{-- Removed bg-info text-white --}}

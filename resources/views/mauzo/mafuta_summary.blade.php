@@ -110,7 +110,7 @@
                     <th>Discount_(TZS)</th>
                     <th>Total_Price_(TZS)</th>
                     <th>Payment_Method</th>
-                    <th>Status</th>
+                    <th>Sales Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>

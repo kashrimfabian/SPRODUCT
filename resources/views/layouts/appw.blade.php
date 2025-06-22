@@ -223,6 +223,8 @@
 
             </li>
 
+            
+
 
 
             <li class="nav-item">
@@ -317,6 +319,21 @@
 
                 </ul>
 
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#loans-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-receipt-cutoff"></i><span>uchekechaji</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="loans-nav" class="nav-content collapse"> <li>
+                        <a href="{{ route('uchekechaji.index') }}">
+                            <i class="bi bi-circle"></i><span>da hawa</span>
+                        </a>
+                        <a href="{{ route('uchekechaji.index') }}">
+                            <i class="bi bi-trash2-fill"></i><span>Wateja</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
 
 
@@ -506,20 +523,7 @@
                 </ul>
             </li>
 
-            <!-- <li class="nav-item">
-                <a class="nav-link collapsed" data-bs-target="#loans-nav" data-bs-toggle="collapse" href="#">
-                    <i class="bi bi-receipt-cutoff"></i><span>Loans</span><i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <ul id="loans-nav" class="nav-content collapse"> <li>
-                        <a href="{{ route('loans.index') }}">
-                            <i class="bi bi-circle"></i><span>loans</span>
-                        </a>
-                        <a href="{{ route('loan_payments.index') }}">
-                            <i class="bi bi-trash2-fill"></i><span>Loans_payments</span>
-                        </a>
-                    </li>
-                </ul>
-            </li> -->
+            
 
 
 

@@ -19,6 +19,7 @@ class Stock extends Model
         'total_al_kgms',
         'ugido',
         'lami',
+        'cleaned_kgm',    
     ];
 
     public function alizeti()

@@ -24,6 +24,7 @@ use App\Http\Controllers\CustomerDebitController;
 use App\Http\Controllers\CustomerDebitPaymentController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UchekechajiController;
 
 
 Route::get('/', function () {
@@ -59,7 +60,7 @@ Route::middleware(['user'])->group(function () {
     
     // Alizeti Routes
     Route::prefix('alizeti')->name('alizeti.')->group(function () {
-        Route::get('/', [AlizetiController::class, 'index'])->name('index'); // This would usually be handled by resource, but explicit is fine
+        Route::get('/', [AlizetiController::class, 'index'])->name('index'); 
         Route::get('/create', [AlizetiController::class, 'create'])->name('create');
         Route::post('/', [AlizetiController::class, 'store'])->name('store');
         Route::get('/{alizeti}/edit', [AlizetiController::class, 'edit'])->name('edit');
@@ -67,9 +68,9 @@ Route::middleware(['user'])->group(function () {
         Route::delete('/{alizeti}', [AlizetiController::class, 'destroy'])->name('destroy');
         Route::get('/summary', [AlizetiController::class, 'displaySummary'])->name('summary');
         Route::post('/generate-batch', [AlizetiController::class, 'generateBatch'])->name('generate-batch');
-        Route::get('/export', [AlizetiController::class, 'exportExcel'])->name('export'); // For Excel Export
+        Route::get('/export', [AlizetiController::class, 'exportExcel'])->name('export'); 
     });
-    // Remove the redundant `Route::resource('alizeti', AlizetiController::class);` if it duplicates these
+    
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
@@ -77,29 +78,27 @@ Route::middleware(['user'])->group(function () {
     Route::resource('production-batches', ProductionBatchController::class);
     Route::resource('inventories', InventoryController::class);
     Route::resource('expenses', ExpenseController::class);
-    Route::resource('sales', SaleController::class); // Note: You have 'Mauzo' for sales, consider consolidating.
+    Route::resource('sales', SaleController::class); 
     Route::get('/change-password', [UserController::class, 'showChangePasswordForm'])->name('change-password.form');
     Route::post('/change-password', [UserController::class, 'updatePassword'])->name('change-password.update');
     
     Route::resource('uzalishaji', UzalishajiController::class);
     Route::resource('uchujaji', UchujajiController::class);
+    Route::resource('uchekechaji', UchekechajiController::class);
 
-    // Mauzo (Sales) Routes - Grouped for consistency
-    Route::prefix('mauzo')->name('mauzo.')->group(function () {
-        // Summary Routes, all pointing to the single mauzo_summary view (with dynamic title)
-        Route::get('/', [MauzoController::class, 'index'])->name('index'); // Mafuta Summary
+    
+    Route::prefix('mauzo')->name('mauzo.')->group(function () {        
+        Route::get('/', [MauzoController::class, 'index'])->name('index'); 
         Route::get('/mashudu-summary', [MauzoController::class, 'mashuduSummary'])->name('mashudu_summary');
         Route::get('/ugido-summary', [MauzoController::class, 'ugidoSummary'])->name('ugido_summary');
         Route::get('/lami-summary', [MauzoController::class, 'lamiSummary'])->name('lami_summary');
         Route::get('/mafuta-summary', [MauzoController::class, 'mafutaSummary'])->name('mafuta_summary');
-
-        // CRUD Operations
         Route::get('/create', [MauzoController::class, 'create'])->name('create');
         Route::post('/', [MauzoController::class, 'store'])->name('store');
         Route::get('/{mauzo}/edit', [MauzoController::class, 'edit'])->name('edit');
         Route::put('/{mauzo}', [MauzoController::class, 'update'])->name('update');
-        Route::delete('/{mauzo}', [MauzoController::class, 'destroy'])->name('destroy'); // Moved inside group
-        Route::post('/{mauzo}/confirm', [MauzoController::class, 'confirm'])->name('confirm'); // Moved inside group
+        Route::delete('/{mauzo}', [MauzoController::class, 'destroy'])->name('destroy'); 
+        Route::post('/{mauzo}/confirm', [MauzoController::class, 'confirm'])->name('confirm'); 
     });
 
     

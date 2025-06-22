@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container">
-    <h1>Stock List</h1>
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+            Stock list records
+        </h4>
+    </div>
 
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -15,7 +19,8 @@
                 <tr>
                     <th>S/N</th>
                     <th>Batch_No</th>
-                    <th>Total_Al_Kgms</th>
+                    <th>Uncleaned_Kgs</th>
+                    <th>Cleaned_kgs
                     <th>Mafuta_Masafi</th>
                     <th>Mashudu</th>
                     <th>Mafuta_machafu</th>
@@ -29,6 +34,7 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $stock->alizeti->batch_no }}</td>
                     <td>{{ $stock->total_al_kgms }}</td>
+                    <td>{{ $stock->cleaned_kgm }}</td>
                     <td>{{ $stock->mafuta_masafi }}</td>
                     <td>{{ $stock->mashudu }}</td>
                     <td>{{ $stock->mafuta_machafu }}</td>

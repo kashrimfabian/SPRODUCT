@@ -28,41 +28,40 @@
                 <div class="mb-3">
                     <label for="tarehe" class="form-label">Select Date</label>
                     <input type="date" id="tarehe" name="tarehe" class="form-control datepicker" placeholder="Select a date"
-                        value="{{ old('tarehe', date('Y-m-d')) }}" required> {{-- Added current date as default --}}
+                        value="{{ old('tarehe', date('Y-m-d')) }}" required> 
                 </div>
 
                 <div class="mb-3">
                     <label for="alizeti_id" class="form-label">Select Batch Number (Available Kg)</label>
                     <select id="alizeti_id" name="alizeti_id" class="form-select" required>
                         <option value="">-- Select Batch --</option>
-                        {{-- CORRECTED: Loop over $availableAlizeti as passed by controller --}}
+                    
                         @foreach($availableAlizeti as $alizetiBatch) 
                             <option value="{{ $alizetiBatch->ali_id }}" 
                                 
                                 data-available-kg="{{ $alizetiBatch->stock->total_al_kgms ?? 0 }}"
                                 {{ old('alizeti_id') == $alizetiBatch->ali_id ? 'selected' : '' }}>
-                                {{-- CORRECTED: Access batch_no directly from Alizeti model --}}
-                                {{ $alizetiBatch->batch_no }} ({{ $alizetiBatch->stock->total_al_kgms ?? 0 }} Kg)
+                                {{ $alizetiBatch->batch_no }} ({{ $alizetiBatch->stock->cleaned_kgm ?? 0 }} Kg)
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- NEW: Display for Available Kg (as per your JavaScript) --}}
+                
                 <div class="mb-3">
                     <label for="available_kg" class="form-label">Available Alizeti Kg in Batch</label>
-                    <input type="text" id="available_kg" class="form-control" readonly disabled> {{-- Readonly and disabled to prevent manual input --}}
+                    <input type="text" id="available_kg" class="form-control" readonly disabled> 
                 </div>
                 
                 <div class="mb-3">
                     <label for="alizeti_kgm" class="form-label">Alizeti Used (Kg)</label>
-                    <input type="number" name="alizeti_kgm" id="alizeti_kgm" class="form-control" min="1"
+                    <input type="number" name="alizeti_kgm" id="alizeti_kgm" class="form-control" min="1" step="0.01"
                         value="{{ old('alizeti_kgm') }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="mafuta_machafu" class="form-label">Mafuta Machafu (Liters)</label>
-                    <input type="number" name="mafuta_machafu" id="mafuta_machafu" class="form-control" min="1"
+                    <input type="number" name="mafuta_machafu" id="mafuta_machafu" class="form-control" min="0" step="0.01"
                         value="{{ old('mafuta_machafu') }}" required>
                 </div>
 
@@ -99,7 +98,7 @@
         const alizetiSelect = document.getElementById('alizeti_id');
         const availableKgInput = document.getElementById('available_kg');
 
-        // Set initial value for available_kg if an option is pre-selected (e.g., from old('alizeti_id'))
+    
         if (alizetiSelect.value) {
             const selectedOption = alizetiSelect.options[alizetiSelect.selectedIndex];
             availableKgInput.value = selectedOption.dataset.availableKg;
@@ -110,7 +109,7 @@
             if (selectedOption.value) {
                 availableKgInput.value = selectedOption.dataset.availableKg;
             } else {
-                availableKgInput.value = ''; // Clear if "Select Batch" is chosen
+                availableKgInput.value = ''; 
             }
         });
     });
