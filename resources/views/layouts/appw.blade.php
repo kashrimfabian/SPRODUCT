@@ -303,15 +303,17 @@
 
                     <li>
 
-                        <a href="{{ route('alizeti.index') }}">
-
-                            <i class="bi bi-circle"></i><span>Da hawa alzeti</span>
-
-                        </a>
+                        
 
                         <a href="{{ route('alizeti.summary') }}">
 
-                            <i class="bi bi-circle"></i><span>record alizeti</span>
+                            <i class="bi bi-circle"></i><span>da hawa alizeti</span>
+
+                        </a>
+
+                        <a href="{{ route('cust_alizeti.index') }}">
+
+                            <i class="bi bi-circle"></i><span>wateja alzeti</span>
 
                         </a>
 
@@ -329,7 +331,7 @@
                         <a href="{{ route('uchekechaji.index') }}">
                             <i class="bi bi-circle"></i><span>da hawa</span>
                         </a>
-                        <a href="{{ route('uchekechaji.index') }}">
+                        <a href="{{ route('cust_clean.index') }}">
                             <i class="bi bi-trash2-fill"></i><span>Wateja</span>
                         </a>
                     </li>
@@ -360,7 +362,7 @@
 
                         </a>
 
-                        <a href="{{ route('uzalishaji.index') }}">
+                        <a href="{{ route('ukamuaji.index') }}">
 
                             <i class="bi bi-circle"></i><span>Wateja</span>
 
@@ -392,7 +394,7 @@
 
                         </a>
 
-                        <a href="{{ route('uchujaji.index')}}">
+                        <a href="{{ route('filtering.index')}}">
 
                             <i class="bi bi-circle"></i><span>Wateja</span>
 
@@ -424,7 +426,7 @@
 
                         </a>
 
-                        <a href="{{ route('stocks.index')}}">
+                        <a href="{{ route('customer_stocks.index')}}">
 
                             <i class="bi bi-circle"></i><span>Wateja</span>
 

@@ -25,6 +25,12 @@ use App\Http\Controllers\CustomerDebitPaymentController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UchekechajiController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustAlizetiController;
+use App\Http\Controllers\CustomerStockController;
+use App\Http\Controllers\CustCleanController;
+use App\Http\Controllers\UkamuajiController;
+use App\Http\Controllers\FilteringController;
 
 
 Route::get('/', function () {
@@ -85,6 +91,12 @@ Route::middleware(['user'])->group(function () {
     Route::resource('uzalishaji', UzalishajiController::class);
     Route::resource('uchujaji', UchujajiController::class);
     Route::resource('uchekechaji', UchekechajiController::class);
+    Route::resource('customers', CustomerController::class);
+    Route::resource('cust_alizeti', CustAlizetiController::class);
+    Route::resource('customer_stocks', CustomerStockController::class);
+    Route::resource('cust_clean', CustCleanController::class);
+    Route::resource('ukamuaji', UkamuajiController::class);
+    Route::resource('filtering', FilteringController::class);
 
     
     Route::prefix('mauzo')->name('mauzo.')->group(function () {        
