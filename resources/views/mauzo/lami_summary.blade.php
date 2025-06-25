@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container">
-    <h4 class="text-center mb-4 text-primary fw-bold">Lami Sales Records</h4>
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+            lami sales records
+        </h4>
+    </div>
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -13,7 +17,7 @@
     @endif
 
 
-    
+
 
     <div class="row mb-3">
 
@@ -88,7 +92,8 @@
                 <select name="payment_id" id="payment_id" class="form-select">
                     <option value="">All Payment methods</option>
                     @foreach($paymentMethods as $method)
-                    <option value="{{ $method->payment_id }}" {{ request('payment_id') == $method->name ? 'selected' : '' }}>
+                    <option value="{{ $method->payment_id }}"
+                        {{ request('payment_id') == $method->name ? 'selected' : '' }}>
                         {{ $method->name }}
                     </option>
                     @endforeach

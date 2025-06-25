@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container">
-    <h4 class="text-center mb-4 text-primary fw-bold">Ugido Sales Records</h4>
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+            ugido sales records
+        </h4>
+    </div>
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>

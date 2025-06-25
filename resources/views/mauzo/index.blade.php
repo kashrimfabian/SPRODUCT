@@ -1,10 +1,11 @@
 @extends('layouts.appw')
 @section('content')
 <div class="container">
-    <h4
-        style="text-align: center; color: #3490dc; font-family: 'Arial', sans-serif; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
-        Sales Records</h4>
-
+<div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+        sales records
+        </h4>
+    </div>
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -246,7 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showCancelButton: true,
                 confirmButtonColor: '#17a2b8',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, confirm it!'
+                confirmButtonText: 'Yes, confirm it!',
+                allowOutsideClick: false,
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.closest('form').submit();

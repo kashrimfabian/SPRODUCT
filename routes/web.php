@@ -31,6 +31,7 @@ use App\Http\Controllers\CustomerStockController;
 use App\Http\Controllers\CustCleanController;
 use App\Http\Controllers\UkamuajiController;
 use App\Http\Controllers\FilteringController;
+use App\Http\Controllers\ProductTransactionController;
 
 
 Route::get('/', function () {
@@ -97,6 +98,8 @@ Route::middleware(['user'])->group(function () {
     Route::resource('cust_clean', CustCleanController::class);
     Route::resource('ukamuaji', UkamuajiController::class);
     Route::resource('filtering', FilteringController::class);
+    Route::resource('product_transactions', ProductTransactionController::class);
+    Route::post('product_transactions/{product_transaction}/confirm', [ProductTransactionController::class, 'confirm'])->name('product_transactions.confirm');
 
     
     Route::prefix('mauzo')->name('mauzo.')->group(function () {        

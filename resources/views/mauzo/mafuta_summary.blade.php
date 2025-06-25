@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container">
-    <h4 class="text-center mb-4 text-primary fw-bold">Mafuta Sales Records</h4> {{-- Hardcoded title for Mafuta --}}
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+            mafuta sales records
+        </h4>
+    </div>
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -13,7 +17,7 @@
     @endif
 
     <div class="row mb-3">
-       
+
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
                 All Sales
@@ -47,7 +51,8 @@
     </div>
 
     {{-- Filter Form --}}
-    <form action="{{ route('mauzo.mafuta_summary') }}" method="GET" class="row gx-2 gy-2 align-items-center mb-3"> {{-- Form action points to its own route --}}
+    <form action="{{ route('mauzo.mafuta_summary') }}" method="GET" class="row gx-2 gy-2 align-items-center mb-3">
+        {{-- Form action points to its own route --}}
         <div class="col-md-auto">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-filter"></i></span>
@@ -92,7 +97,8 @@
 
         <div class="col-md-auto">
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</a> {{-- Reset button points to its own route --}}
+            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i>
+                Reset</a> {{-- Reset button points to its own route --}}
         </div>
     </form>
 
@@ -162,9 +168,9 @@
                     </td>
                 </tr>
                 @empty
-                    <tr>
-                        <td colspan="12" class="text-center">No sales records found for Mafuta.</td>
-                    </tr>
+                <tr>
+                    <td colspan="12" class="text-center">No sales records found for Mafuta.</td>
+                </tr>
                 @endforelse
             </tbody>
             <tfoot>

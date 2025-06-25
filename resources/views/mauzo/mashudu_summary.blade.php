@@ -2,7 +2,11 @@
 
 @section('content')
 <div class="container">
-    <h4 class="text-center mb-4 text-primary fw-bold">Mashudu Sales Records</h4>
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+            mashudu sales records
+        </h4>
+    </div>
 
     @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -13,11 +17,11 @@
     @endif
 
     {{-- Navigation buttons for all sales views --}}
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
-                All Sales
-            </a>
-        </div>
+    <div class="col-12 col-md-auto mb-3">
+        <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
+            All Sales
+        </a>
+    </div>
 
     <div class="row mb-3">
         <div class="col-12 col-md-auto mb-3">
@@ -31,7 +35,7 @@
                 Mashudu sales
             </a>
         </div>
-        
+
         <div class="col-12 col-md-auto mb-3">
             <a href="{{ route('mauzo.ugido_summary') }}" class="btn btn-warning w-100 w-md-auto">
                 Ugido Sales
@@ -96,7 +100,8 @@
 
         <div class="col-md-auto">
             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-            <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i> Reset</a>
+            <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i>
+                Reset</a>
         </div>
     </form>
 
@@ -139,7 +144,7 @@
                         @elseif ($sale->payment_status == 'not payed')
                         <span class="badge bg-warning text-dark">Not Payed</span>
                         @else
-                        {{ $sale->payment_status }} 
+                        {{ $sale->payment_status }}
                         @endif
                     <td>
                         @if ($sale->is_confirmed)
@@ -176,9 +181,9 @@
                     </td>
                 </tr>
                 @empty
-                    <tr>
-                        <td colspan="12" class="text-center">No sales records found for this product.</td>
-                    </tr>
+                <tr>
+                    <td colspan="12" class="text-center">No sales records found for this product.</td>
+                </tr>
                 @endforelse
             </tbody>
             <tfoot>
