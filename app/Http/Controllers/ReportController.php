@@ -5,32 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Alizeti;
 use App\Models\Expense;
 use App\Models\Mauzo;
+use App\Models\Filtering; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use Maatwebsite\Excel\Facades\Excel; // For Excel
-use Barryvdh\DomPDF\Facade\Pdf; // For PDF
+use Maatwebsite\Excel\Facades\Excel; 
+use Barryvdh\DomPDF\Facade\Pdf; 
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
-    /**
-     * Generate Profit & Loss Report.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Contracts\View\View
-     */
+    
     public function profitLoss(Request $request)
     {
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $userId = Auth::id();
 
-        // 1. Sales Data (Mauzo)
+        
         $salesData = Mauzo::query()
-            ->selectRaw('tarehe, SUM(total_price) as total_sales') //  use total_price
+            ->selectRaw('tarehe, SUM(total_price) as total_sales')
             ->when($startDate, function ($query) use ($startDate) {
                 return $query->where('tarehe', '>=', $startDate);
             })
@@ -41,9 +36,9 @@ class ReportController extends Controller
             ->get()
             ->keyBy('tarehe');
 
-        // 2. Expenses Data
+        // Fetch Expenses Data
         $expensesData = Expense::query()
-            ->where('user_id', $userId)
+            ->where('user_id', $userId) // Filter by authenticated user's expenses
             ->selectRaw('tarehe, SUM(amount) as total_expenses')
             ->when($startDate, function ($query) use ($startDate) {
                 return $query->where('tarehe', '>=', $startDate);
@@ -55,7 +50,7 @@ class ReportController extends Controller
             ->get()
             ->keyBy('tarehe');
 
-        // 3. Alizeti Data
+        // Fetch Alizeti (Sunflower) Cost Data
         $alizetiData = Alizeti::query()
             ->selectRaw('tarehe, SUM(gunia_total) as total_gunia, SUM(al_kilogram) as total_kilogram, SUM(total_price) as total_alizeti_cost')
             ->when($startDate, function ($query) use ($startDate) {
@@ -68,29 +63,47 @@ class ReportController extends Controller
             ->get()
             ->keyBy('tarehe');
 
-        // 4. Prepare Report Data
-        $reportData = [];
-        $dates = $this->getUniqueDates($salesData->toArray(), $expensesData->toArray(), $alizetiData->toArray());
-        //dd($dates);
+        // NEW: Fetch Filtering Cost Data
+        // IMPORTANT: Assumes 'filtering' table has a 'tarehe' column for the date of filtering.
+        $filteringData = Filtering::query()
+            ->selectRaw('tarehe, SUM(cost_used) as total_filtering_cost')
+            ->when($startDate, function ($query) use ($startDate) {
+                return $query->where('tarehe', '>=', $startDate);
+            })
+            ->when($endDate, function ($query) use ($endDate) {
+                return $query->where('tarehe', '<=', $endDate);
+            })
+            ->groupBy('tarehe')
+            ->get()
+            ->keyBy('tarehe');
 
-        // 5. Calculate totals and populate report data
+
+        $reportData = [];
+        // Update getUniqueDates to include filteringData
+        $dates = $this->getUniqueDates($salesData->toArray(), $expensesData->toArray(), $alizetiData->toArray(), $filteringData->toArray());
+        
         $totalSales = 0;
         $totalExpenses = 0;
         $totalAlizetiCost = 0;
+        $totalFilteringCost = 0; // NEW: Initialize total filtering cost
+        $overallProfitLoss = 0;
 
         foreach ($dates as $date) {
             $sale = $salesData[$date] ?? (object)['total_sales' => 0];
             $expense = $expensesData[$date] ?? (object)['total_expenses' => 0];
             $alizeti = $alizetiData[$date] ?? (object)['total_alizeti_cost' => 0, 'total_gunia' => 0, 'total_kilogram' => 0];
+            $filtering = $filteringData[$date] ?? (object)['total_filtering_cost' => 0]; // NEW: Get filtering data
 
             $dailySales = $sale->total_sales ?? 0;
             $dailyExpenses = $expense->total_expenses ?? 0;
             $dailyAlizetiCost = $alizeti->total_alizeti_cost ?? 0;
             $dailyGunia = $alizeti->total_gunia ?? 0;
             $dailyKilogram = $alizeti->total_kilogram ?? 0;
+            $dailyFilteringCost = $filtering->total_filtering_cost ?? 0; // NEW: Get daily filtering cost
 
 
-            $dailyProfitLoss = $dailySales - $dailyExpenses - $dailyAlizetiCost;
+            // Update daily profit/loss calculation
+            $dailyProfitLoss = $dailySales - $dailyExpenses - $dailyAlizetiCost + $dailyFilteringCost;
 
             $reportData[$date] = [
                 'date' => $date,
@@ -99,19 +112,20 @@ class ReportController extends Controller
                 'total_alizeti_cost' => $dailyAlizetiCost,
                 'total_gunia' => $dailyGunia,
                 'total_kilogram' => $dailyKilogram,
-                'daily_profit_loss' => $dailyProfitLoss, // Include daily profit/loss
+                'total_filtering_cost' => $dailyFilteringCost, // NEW: Add to report data
+                'daily_profit_loss' => $dailyProfitLoss, 
             ];
 
             $totalSales += $dailySales;
             $totalExpenses += $dailyExpenses;
             $totalAlizetiCost += $dailyAlizetiCost;
+            $totalFilteringCost += $dailyFilteringCost; // NEW: Accumulate total filtering cost
+            $overallProfitLoss += $dailyProfitLoss; 
         }
 
-        // 6. Calculate overall profit/loss
-        $profitLoss = $totalSales - $totalExpenses - $totalAlizetiCost;
+        // Update overall profit/loss calculation
+        $profitLoss = $totalSales - $totalExpenses - $totalAlizetiCost + $totalFilteringCost;
 
-
-        // 7. Return the view
         $viewData = [
             'reportData' => $reportData,
             'startDate' => $startDate,
@@ -119,6 +133,7 @@ class ReportController extends Controller
             'totalSales' => $totalSales,
             'totalExpenses' => $totalExpenses,
             'totalAlizetiCost' => $totalAlizetiCost,
+            'totalFilteringCost' => $totalFilteringCost, // NEW: Pass to view
             'profitLoss' => $profitLoss,
         ];
 
@@ -126,23 +141,39 @@ class ReportController extends Controller
     }
 
     /**
-     * Export Profit & Loss Report.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\Response
+     * Export the Profit/Loss report to Excel, PDF, or CSV.
      */
     public function exportProfitLoss(Request $request)
     {
-        ob_start(); // Start output buffering, VERY IMPORTANT
-
         $type = $request->input('type');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $userId = Auth::id();
 
-        // 1. Sales Data (Mauzo)
-        $salesData = Mauzo::query()
-           ->selectRaw('tarehe, SUM(total_price) as total_sales') //  use total_price
+        // Fetch Sales Data
+        $salesData = Mauzo::query()->selectRaw('tarehe, SUM(total_price) as total_sales')->when($startDate, function ($query) use ($startDate) {
+                return $query->where('tarehe', '>=', $startDate);
+            })->when($endDate, function ($query) use ($endDate) {
+                return $query->where('tarehe', '<=', $endDate);
+            })->groupBy('tarehe')->get()->keyBy('tarehe');
+
+        // Fetch Expenses Data
+        $expensesData = Expense::query()->where('user_id', $userId)->selectRaw('tarehe, SUM(amount) as total_expenses')->when($startDate, function ($query) use ($startDate) {
+                return $query->where('tarehe', '>=', $startDate);
+            })->when($endDate, function ($query) use ($endDate) {
+                return $query->where('tarehe', '<=', $endDate);
+            })->groupBy('tarehe')->get()->keyBy('tarehe');
+
+        // Fetch Alizeti (Sunflower) Cost Data
+        $alizetiData = Alizeti::query()->selectRaw('tarehe, SUM(gunia_total) as total_gunia, SUM(al_kilogram) as total_kilogram, SUM(total_price) as total_alizeti_cost')->when($startDate, function ($query) use ($startDate) {
+                return $query->where('tarehe', '>=', $startDate);
+            })->when($endDate, function ($query) use ($endDate) {
+                return $query->where('tarehe', '<=', $endDate);
+            })->groupBy('tarehe')->get()->keyBy('tarehe');
+        
+        // NEW: Fetch Filtering Cost Data
+        $filteringData = Filtering::query()
+            ->selectRaw('tarehe, SUM(cost_used) as total_filtering_cost')
             ->when($startDate, function ($query) use ($startDate) {
                 return $query->where('tarehe', '>=', $startDate);
             })
@@ -153,52 +184,30 @@ class ReportController extends Controller
             ->get()
             ->keyBy('tarehe');
 
-        // 2. Expenses Data
-        $expensesData = Expense::query()
-            ->where('user_id', $userId)
-            ->selectRaw('tarehe, SUM(amount) as total_expenses')
-            ->when($startDate, function ($query) use ($startDate) {
-                return $query->where('tarehe', '>=', $startDate);
-            })
-            ->when($endDate, function ($query) use ($endDate) {
-                return $query->where('tarehe', '<=', $endDate);
-            })
-            ->groupBy('tarehe')
-            ->get()
-            ->keyBy('tarehe');
-
-        // 3. Alizeti Data
-        $alizetiData = Alizeti::query()
-            ->selectRaw('tarehe, SUM(gunia_total) as total_gunia, SUM(al_kilogram) as total_kilogram, SUM(total_price) as total_alizeti_cost')
-            ->when($startDate, function ($query) use ($startDate) {
-                return $query->where('tarehe', '>=', $startDate);
-            })
-            ->when($endDate, function ($query) use ($endDate) {
-                return $query->where('tarehe', '<=', $endDate);
-            })
-            ->groupBy('tarehe')
-            ->get()
-            ->keyBy('tarehe');
-
-        // 4. Prepare Report Data
         $reportData = [];
-        $dates = $this->getUniqueDates($salesData->toArray(), $expensesData->toArray(), $alizetiData->toArray());  // Pass arrays
+        // Update getUniqueDates to include filteringData
+        $dates = $this->getUniqueDates($salesData->toArray(), $expensesData->toArray(), $alizetiData->toArray(), $filteringData->toArray());
 
-        // 5. Calculate totals and populate report data
         $totalSales = 0;
         $totalExpenses = 0;
         $totalAlizetiCost = 0;
+        $totalFilteringCost = 0; // NEW: Initialize total filtering cost
+        $overallProfitLoss = 0;
 
         foreach ($dates as $date) {
             $sale = $salesData[$date] ?? (object)['total_sales' => 0];
             $expense = $expensesData[$date] ?? (object)['total_expenses' => 0];
             $alizeti = $alizetiData[$date] ?? (object)['total_alizeti_cost' => 0, 'total_gunia' => 0, 'total_kilogram' => 0];
+            $filtering = $filteringData[$date] ?? (object)['total_filtering_cost' => 0]; // NEW: Get filtering data
 
             $dailySales = $sale->total_sales ?? 0;
             $dailyExpenses = $expense->total_expenses ?? 0;
             $dailyAlizetiCost = $alizeti->total_alizeti_cost ?? 0;
             $dailyGunia = $alizeti->total_gunia ?? 0;
             $dailyKilogram = $alizeti->total_kilogram ?? 0;
+            $dailyFilteringCost = $filtering->total_filtering_cost ?? 0; // NEW: Get daily filtering cost
+
+            $dailyProfitLoss = $dailySales - $dailyExpenses - $dailyAlizetiCost + $dailyFilteringCost; // Update daily calculation
 
             $reportData[$date] = [
                 'date' => $date,
@@ -207,147 +216,139 @@ class ReportController extends Controller
                 'total_alizeti_cost' => $dailyAlizetiCost,
                 'total_gunia' => $dailyGunia,
                 'total_kilogram' => $dailyKilogram,
+                'total_filtering_cost' => $dailyFilteringCost, // NEW: Add to report data
+                'daily_profit_loss' => $dailyProfitLoss, 
             ];
 
             $totalSales += $dailySales;
             $totalExpenses += $dailyExpenses;
             $totalAlizetiCost += $dailyAlizetiCost;
+            $totalFilteringCost += $dailyFilteringCost; // NEW: Accumulate total filtering cost
+            $overallProfitLoss += $dailyProfitLoss;
         }
-
-        // 6. Calculate overall profit/loss
-        $profitLoss = $totalSales - $totalExpenses - $totalAlizetiCost;
+        
+        $profitLoss = $totalSales - $totalExpenses - $totalAlizetiCost + $totalFilteringCost; // Final overall calculation
 
         $filename = 'profit_loss_report_' . now()->format('YmdHis');
 
         switch ($type) {
             case 'excel':
-                // In-Controller Excel handling
                 try {
-                    $response = Excel::download(function () use ($reportData, $profitLoss) {
-                        return view('reports.profit-loss-excel', ['reportData' => $reportData, 'profitLoss' => $profitLoss]); // Pass combined data
+                    return Excel::download(function ($excel) use ($reportData, $totalSales, $totalExpenses, $totalAlizetiCost, $totalFilteringCost, $overallProfitLoss, $startDate, $endDate) {
+                        $excel->sheet('Profit Loss Report', function ($sheet) use ($reportData, $totalSales, $totalExpenses, $totalAlizetiCost, $totalFilteringCost, $overallProfitLoss, $startDate, $endDate) {
+                            $sheet->fromArray([
+                                ['Profit/Loss Report'],
+                                ['Start Date:', $startDate],
+                                ['End Date:', $endDate],
+                                [],
+                                // NEW COLUMN HEADER for Excel
+                                ['Date', 'Total Sales (TZS)', 'Total Expenses (TZS)', 'Total Alizeti Cost (TZS)', 'Total Filtering Cost (TZS)', 'Total Gunia', 'Total Kilograms', 'Daily Profit/Loss (TZS)'],
+                            ], null, 'A1', false, false);
+                            
+                            foreach ($reportData as $data) {
+                                // NEW COLUMN for Excel data row
+                                $sheet->appendRow([
+                                    $data['date'],
+                                    $data['total_sales'],
+                                    $data['total_expenses'],
+                                    $data['total_alizeti_cost'],
+                                    $data['total_filtering_cost'], // NEW: Add filtering cost
+                                    $data['total_gunia'],
+                                    $data['total_kilogram'],
+                                    $data['daily_profit_loss'],
+                                ]);
+                            }
+
+                            $sheet->appendRow([]); // Empty row for spacing
+                            // NEW COLUMN for Excel overall totals row
+                            $sheet->appendRow([
+                                'Overall Totals',
+                                $totalSales,
+                                $totalExpenses,
+                                $totalAlizetiCost,
+                                $totalFilteringCost, // NEW: Add total filtering cost
+                                '', // No total for gunia in this row
+                                '', // No total for kilograms in this row
+                                $overallProfitLoss
+                            ]);
+                        });
                     }, $filename . '.xlsx');
-                    ob_end_clean();
-                    return $response;
                 } catch (\Exception $e) {
                     Log::error('Excel generation failed: ' . $e->getMessage());
-                    ob_end_clean();
-                    return response()->json(['error' => 'Failed to generate Excel file: ' . $e->getMessage()], 500); // Return error
+                    return back()->with('error', 'Failed to generate Excel file: ' . $e->getMessage());
                 }
                 break;
             case 'pdf':
                 try {
-                    $pdf = Pdf::loadView('reports.profit-loss-pdf', ['reportData' => $reportData, 'profitLoss' => $profitLoss]); // Pass combined data
-                    $pdfContent = $pdf->output(); // Get PDF content as string
-                    if ($pdfContent === false) {
-                        throw new \Exception('Failed to generate PDF content.');
-                    }
-                    Storage::disk('local')->put($filename . '.pdf', $pdfContent); //save
-                    $response = response()->file(storage_path('app/' . $filename . '.pdf'), [
-                        'Content-Type' => 'application/pdf',
+                    $pdf = Pdf::loadView('reports.profit-loss-pdf', [
+                        'reportData' => $reportData,
+                        'totalSales' => $totalSales,
+                        'totalExpenses' => $totalExpenses,
+                        'totalAlizetiCost' => $totalAlizetiCost,
+                        'totalFilteringCost' => $totalFilteringCost, // NEW: Pass to PDF view
+                        'profitLoss' => $profitLoss,
+                        'startDate' => $startDate,
+                        'endDate' => $endDate,
                     ]);
-                    ob_end_clean();
-                    return $response;
+                    return $pdf->download($filename . '.pdf');
 
                 } catch (\Exception $e) {
                     Log::error('PDF generation failed: ' . $e->getMessage());
-                    ob_end_clean();
-                    return response()->json(['error' => 'Failed to generate PDF file: ' . $e->getMessage()], 500); // Return error
+                    return back()->with('error', 'Failed to generate PDF file: ' . $e->getMessage());
                 }
                 break;
             case 'csv':
             default:
-                $headers = [
+                return response()->streamDownload(function () use ($reportData, $totalSales, $totalExpenses, $totalAlizetiCost, $totalFilteringCost, $overallProfitLoss) {
+                    $file = fopen('php://output', 'w');
+                    
+                    // CSV Headers - NEW COLUMN for CSV header
+                    fputcsv($file, ['Date', 'Total Sales (TZS)', 'Total Expenses (TZS)', 'Total Alizeti Cost (TZS)', 'Total Filtering Cost (TZS)', 'Total Gunia', 'Total Kilograms', 'Daily Profit/Loss (TZS)']);
+
+                    // Report data rows
+                    foreach ($reportData as $data) {
+                        // NEW COLUMN for CSV data row
+                        fputcsv($file, [
+                            $data['date'],
+                            $data['total_sales'],
+                            $data['total_expenses'],
+                            $data['total_alizeti_cost'],
+                            $data['total_filtering_cost'], // NEW: Add filtering cost
+                            $data['total_gunia'],
+                            $data['total_kilogram'],
+                            $data['daily_profit_loss'],
+                        ]);
+                    }
+
+                    // Overall Totals Row - NEW COLUMN for CSV overall totals row
+                    fputcsv($file, []); // Empty row for spacing
+                    fputcsv($file, [
+                        'Overall Totals',
+                        $totalSales,
+                        $totalExpenses,
+                        $totalAlizetiCost,
+                        $totalFilteringCost, // NEW: Add total filtering cost
+                        '', // No total for gunia in this row
+                        '', // No total for kilograms in this row
+                        $overallProfitLoss
+                    ]);
+
+                    fclose($file);
+                }, $filename . '.csv', [
                     'Content-Type' => 'text/csv',
-                    'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
-                ];
-                return $this->generateCsvResponse($reportData, $headers, $profitLoss);
+                ]);
         }
     }
 
-   private function generateCsvResponse($reportData, $headers, $profitLoss)
+    
+    private function getUniqueDates(array ...$dataArrays): array
     {
-        $callback = function () use ($reportData, $headers, $profitLoss): StreamedResponse {
-            $file = fopen('php://output', 'w');
-            if ($file === false) {
-                Log::error('Failed to open php://output for CSV export.');
-                return new StreamedResponse(function () {
-                    echo "Error generating CSV: Could not open output stream.";
-                }, 500, ['Content-Type' => 'text/plain']);
-            }
-
-            // Add headers
-            fputcsv($file, ['Date', 'Total Sales (TZS)', 'Total Expenses (TZS)', 'Total Alizeti Cost (TZS)', 'Total Gunia', 'Total Kilograms', 'Profit/Loss']);
-
-            $totalSales = 0;
-            $totalExpenses = 0;
-            $totalAlizetiCost = 0;
-            $totalGunia = 0;
-            $totalKilograms = 0;
-            $overallProfitLoss = 0;
-
-
-            foreach ($reportData as $data) {
-                $dailyProfitLoss = $data['total_sales']  - $data['total_expenses'] - $data['total_alizeti_cost'];
-                fputcsv($file, [
-                    $data['date'],
-                    $data['total_sales'],
-                    $data['total_expenses'],
-                    $data['total_alizeti_cost'],
-                    $data['total_gunia'],
-                    $data['total_kilogram'],
-                    $dailyProfitLoss,
-                ]);
-                $totalSales += $data['total_sales'];
-                $totalExpenses += $data['total_expenses'];
-                $totalAlizetiCost += $data['total_alizeti_cost'];
-                $totalGunia += $data['total_gunia'];
-                $totalKilograms += $data['total_kilogram'];
-                $overallProfitLoss += $dailyProfitLoss;
-            }
-
-            //add totals
-            fputcsv($file, [
-                'Total',
-                $totalSales,
-                $totalExpenses,
-                $totalAlizetiCost,
-                $totalGunia,
-                $totalKilograms,
-                $overallProfitLoss
-            ]);
-
-            fclose($file);
-
-            $response = new StreamedResponse(
-                function () use ($file) {
-                    fpassthru($file);
-                },
-                200,
-                $headers
-            );
-            ob_end_clean();
-            return $response;
-        };
-        return $callback();
-    }
-
-    /**
-     * Helper function to get unique dates from multiple datasets.
-     *
-     * @param  array  $salesData
-     * @param  array  $expensesData
-     * @param  array  $alizetiData
-     * @return array
-     */
-    private function getUniqueDates(array $salesData, array $expensesData, array $alizetiData): array
-    {
-        $dates = array_unique(array_merge(
-            array_keys($salesData),
-            array_keys($expensesData),
-            array_keys($alizetiData)
-        ));
-        sort($dates); // Ensure dates are in order
+        $allDates = [];
+        foreach ($dataArrays as $dataArray) {
+            $allDates = array_merge($allDates, array_keys($dataArray));
+        }
+        $dates = array_unique($allDates);
+        sort($dates); 
         return $dates;
     }
 }
-

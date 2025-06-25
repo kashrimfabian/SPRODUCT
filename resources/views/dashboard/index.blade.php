@@ -2,7 +2,12 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="text-center mb-4 text-primary fw-bold">Oil Production Dashboard</h4>
+    
+    <div class="row justify-content-center">
+        <h4 class="text-center text-dark text-uppercase mb-4">
+        Oil Production & sales Dashboard
+        </h4>
+    </div>
 
     @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -24,198 +29,176 @@
         </div>
     </div>
 
-    ---
-    <!-- Overall Stock Summary -->
+    <hr class="my-4">
+
+    <!-- Overall Stock Summary Table -->
     <div class="row mb-4">
         <div class="col-12">
             <h5 class="mb-3 text-secondary"><i class="fas fa-warehouse me-2"></i>Current Stock Overview</h5>
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-success shadow-sm h-100">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Clean Alizeti (Kg)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalCleanAlizetiKg, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-sun fa-3x text-white-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-primary shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Mafuta Machafu (Lts)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalMafutaMachafuStock, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-oil-can fa-3x text-white-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-warning shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Mafuta Masafi (Lts)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalMafutaMasafiStock, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-flask fa-3x text-white-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-danger shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Mashudu (Kg)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalMashuduStock, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-box fa-3x text-white-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-dark shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Ugido (Lts)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalUgidoStock, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-bong fa-3x text-white-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-secondary shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase mb-0">Lami (Lts)</h6>
-                            <h3 class="display-5 fw-bold">{{ number_format($totalLamiStock, 2) }}</h3>
-                        </div>
-                        <i class="fas fa-flask-poison fa-3x text-white-50"></i>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Clean Alizeti</td>
+                                    <td>{{ number_format($totalCleanAlizetiKg, 2) }} Kg</td>
+                                </tr>
+                                <tr>
+                                    <td>Crude Oil</td>
+                                    <td>{{ number_format($totalMafutaMachafuStock, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Refined Oil</td>
+                                    <td>{{ number_format($totalMafutaMasafiStock, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Mashudu</td>
+                                    <td>{{ number_format($totalMashuduStock, 2) }} Kg</td>
+                                </tr>
+                                <tr>
+                                    <td>Ugido</td>
+                                    <td>{{ number_format($totalUgidoStock, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Lami</td>
+                                    <td>{{ number_format($totalLamiStock, 2) }} Lts</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    ---
-    <!-- Process Totals and Electricity Units -->
+    <hr class="my-4">
+
+    <!-- Production Process Totals Tables -->
     <div class="row mb-4">
         <div class="col-12">
             <h5 class="mb-3 text-secondary"><i class="fas fa-cogs me-2"></i>Production Process Totals</h5>
         </div>
 
-        <!-- Uzalishaji (Pressing) Totals -->
+        <!-- Uzalishaji (Pressing) Totals Table -->
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header"> {{-- Removed bg-primary text-white --}}
+                <div class="card-header">
                     <h5 class="mb-0">Uzalishaji (Pressing) Totals</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Alizeti Processed (Kg):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUzalishajiAlizetiKgm, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Mafuta Machafu Produced (Lts):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUzalishajiMafutaMachafu, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Mashudu Produced (Kg):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUzalishajiMashudu, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Electricity Used (Units):
-                            <span class="badge bg-info rounded-pill p-2">{{ number_format($totalUzalishajiUnitsUsed, 2) }}</span>
-                        </li>
-                    </ul>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <td>Total Alizeti Processed (Kg)</td>
+                                    <td>{{ number_format($totalUzalishajiAlizetiKgm, 2) }} Kg</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Mafuta Machafu Produced (Lts)</td>
+                                    <td>{{ number_format($totalUzalishajiMafutaMachafu, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Mashudu Produced (Kg)</td>
+                                    <td>{{ number_format($totalUzalishajiMashudu, 2) }} Kg</td>
+                                </tr>
+                                <tr>
+                                    <td>Electricity Used (Units)</td>
+                                    <td>{{ number_format($totalUzalishajiUnitsUsed, 2) }} Units</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Uchujaji (Filtration) Totals -->
+        <!-- Uchujaji (Filtration) Totals Table -->
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header"> {{-- Removed bg-success text-white --}}
+                <div class="card-header">
                     <h5 class="mb-0">Uchujaji (Filtration) Totals</h5>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Mafuta Masafi Produced (Lts):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUchujajiMafutaMasafi, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Ugido Produced (Lts):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUchujajiUgido, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Lami Produced (Lts):
-                            <span class="badge bg-primary rounded-pill p-2">{{ number_format($totalUchujajiLami, 2) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Electricity Used (Units):
-                            <span class="badge bg-info rounded-pill p-2">{{ number_format($totalUchujajiUnitsUsed, 2) }}</span>
-                        </li>
-                    </ul>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <td>Total Mafuta Masafi Produced (Lts)</td>
+                                    <td>{{ number_format($totalUchujajiMafutaMasafi, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Ugido Produced (Lts)</td>
+                                    <td>{{ number_format($totalUchujajiUgido, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Total Lami Produced (Lts)</td>
+                                    <td>{{ number_format($totalUchujajiLami, 2) }} Lts</td>
+                                </tr>
+                                <tr>
+                                    <td>Electricity Used (Units)</td>
+                                    <td>{{ number_format($totalUchujajiUnitsUsed, 2) }} Units</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    ---
-    <!-- Latest Prices -->
+    <hr class="my-4">
+
+    <!-- Latest Prices Table -->
     <div class="row mb-4">
         <div class="col-12">
             <h5 class="mb-3 text-secondary"><i class="fas fa-tags me-2"></i>Latest Prices</h5>
         </div>
         <div class="col-md-6 mb-3">
             <div class="card shadow-sm h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0">Price of Lami:</h6>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price (TZS)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Price of Lami</td>
+                                    <td class="fw-bold text-success">{{ number_format($priceOfLami, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Price of Ugido</td>
+                                    <td class="fw-bold text-success">{{ number_format($priceOfUgido, 2) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <h4 class="fw-bold text-success">{{ number_format($priceOfLami, 2) }} TZS</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0">Price of Ugido:</h6>
-                    </div>
-                    <h4 class="fw-bold text-success">{{ number_format($priceOfUgido, 2) }} TZS</h4>
                 </div>
             </div>
         </div>
     </div>
 
-    ---
-    <!-- Recent Sales -->
+    <hr class="my-4">
+
+    <!-- Recent Sales Tables -->
     <div class="row mb-4">
         <div class="col-12">
             <h5 class="mb-3 text-secondary"><i class="fas fa-chart-line me-2"></i>Recent Sales Activities</h5>
         </div>
         
-        
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header"> {{-- Removed bg-info text-white --}}
+                <div class="card-header">
                     <h5 class="mb-0">Recent Mafuta Sales</h5>
                 </div>
                 <div class="card-body">
@@ -247,10 +230,9 @@
             </div>
         </div>
 
-        <!-- Recent Mashudu Sales -->
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header"> {{-- Removed bg-danger text-white --}}
+                <div class="card-header">
                     <h5 class="mb-0">Recent Mashudu Sales</h5>
                 </div>
                 <div class="card-body">

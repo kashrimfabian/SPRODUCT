@@ -70,17 +70,19 @@
                                     <th>Total Sales (TZS)</th>
                                     <th>Total Expenses (TZS)</th>
                                     <th>Total Alizeti Cost (TZS)</th>
+                                    <th>Total Filtering Cost (TZS)</th> {{-- NEW COLUMN HEADER --}}
                                     <th>Profit/Loss (TZS)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
-                                    $overallProfitLoss = 0;
+                                    $overallProfitLoss = 0; // This will be calculated from daily data
                                 @endphp
                                 @foreach ($reportData as $data)
                                     @php
-                                        // Calculate daily profit/loss: Sales - Expenses - Alizeti Cost
-                                        $dailyProfitLoss = $data['total_sales'] - $data['total_expenses'] - $data['total_alizeti_cost'];
+                                        // Ensure daily_profit_loss is calculated here or passed directly
+                                        // The controller passes 'daily_profit_loss', so we can use that directly
+                                        $dailyProfitLoss = $data['daily_profit_loss'] ?? ($data['total_sales'] - $data['total_expenses'] - $data['total_alizeti_cost'] - ($data['total_filtering_cost'] ?? 0));
                                         $overallProfitLoss += $dailyProfitLoss;
                                     @endphp
                                 <tr>
@@ -88,6 +90,7 @@
                                     <td>{{ number_format($data['total_sales'], 2) }}</td>
                                     <td>{{ number_format($data['total_expenses'], 2) }}</td>
                                     <td>{{ number_format($data['total_alizeti_cost'], 2) }}</td>
+                                    <td>{{ number_format($data['total_filtering_cost'] ?? 0, 2) }}</td> {{-- NEW COLUMN DATA --}}
                                     <td class="{{ $dailyProfitLoss >= 0 ? 'text-success' : 'text-danger' }}">
                                         {{ number_format($dailyProfitLoss, 2) }}
                                     </td>
@@ -100,8 +103,9 @@
                                     <th>{{ number_format($totalSales, 2) }}</th>
                                     <th>{{ number_format($totalExpenses, 2) }}</th>
                                     <th>{{ number_format($totalAlizetiCost, 2) }}</th>
-                                    <th class="{{ $overallProfitLoss >= 0 ? 'text-success' : 'text-danger' }}">
-                                        {{ number_format($overallProfitLoss, 2) }}
+                                    <th>{{ number_format($totalFilteringCost ?? 0, 2) }}</th> {{-- NEW COLUMN FOOTER TOTAL --}}
+                                    <th class="{{ ($overallProfitLoss ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                                        {{ number_format($overallProfitLoss ?? 0, 2) }}
                                     </th>
                                 </tr>
                             </tfoot>
@@ -136,14 +140,16 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = "{{ route('reports.profit_loss') }}";
     });
 
-    const presetButtons = document.querySelectorAll('.flatpickr-preset');
-    presetButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            document.getElementById('start_date').value = this.dataset.start;
-            document.getElementById('end_date').value = this.dataset.end;
-            document.querySelector('form').submit();
-        });
-    });
+    // The preset buttons logic seems to be missing from your provided HTML,
+    // but if you re-add them, this script will make them functional.
+    // const presetButtons = document.querySelectorAll('.flatpickr-preset');
+    // presetButtons.forEach(button => {
+    //     button.addEventListener('click', function() {
+    //         document.getElementById('start_date').value = this.dataset.start;
+    //         document.getElementById('end_date').value = this.dataset.end;
+    //         document.querySelector('form').submit();
+    //     });
+    // });
 });
 
 function exportReport() {
