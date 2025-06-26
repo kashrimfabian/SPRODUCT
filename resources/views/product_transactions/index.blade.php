@@ -16,11 +16,75 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="mb-3">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
         <a href="{{ route('product_transactions.create') }}" class="btn btn-success">
             <i class="fas fa-plus"></i> Record New Transaction
         </a>
+        <button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+            <i class="fas fa-filter"></i> Filter Records
+        </button>
     </div>
+
+    
+    <div class="collapse mb-4" id="filterCollapse">
+        <div class="card card-body shadow-sm">
+            <form action="{{ route('product_transactions.index') }}" method="GET">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control datepicker " id="start_date" name="start_date" value="{{ request('start_date') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control datepicker" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="trans_type" class="form-label">Transaction Type</label>
+                        <select class="form-select" id="trans_type" name="trans_type">
+                            <option value="">All Types</option>
+                            <option value="collection" {{ request('trans_type') == 'collection' ? 'selected' : '' }}>Collection</option>
+                            <option value="sale" {{ request('trans_type') == 'sale' ? 'selected' : '' }}>Sale</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="product_id" class="form-label">Product</label>
+                        <select class="form-select" id="product_id" name="product_id">
+                            <option value="">All Products</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->product_id }}" {{ request('product_id') == $product->product_id ? 'selected' : '' }}>{{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="user_id" class="form-label">Recorded By</label>
+                        <select class="form-select" id="user_id" name="user_id">
+                            <option value="">All Users</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->first_name }} {{ $user->last_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="buyer_name" class="form-label">Buyer Name</label>
+                        <input type="text" class="form-control" id="buyer_name" name="buyer_name" value="{{ request('buyer_name') }}" placeholder="Buyer Name">
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Apply Filters</button>
+                        <a href="{{ route('product_transactions.index') }}" class="btn btn-warning"><i class="fas fa-sync-alt"></i> Reset Filters</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -95,7 +159,7 @@
     </div>
 
     <div class="d-flex justify-content-center">
-        {{ $productTransactions->links() }}
+        {{ $productTransactions->appends(request()->except('page'))->links() }}
     </div>
 </div>
 
@@ -123,7 +187,6 @@
             });
         });
 
-        
         const confirmForms = document.querySelectorAll('.confirm-form');
         confirmForms.forEach(form => {
             const confirmButton = form.querySelector('.confirm-btn');
@@ -143,6 +206,22 @@
                 });
             });
         });
+
+        
+        const filterCollapse = document.getElementById('filterCollapse');
+        const filterInputs = filterCollapse.querySelectorAll('input, select');
+        let filtersActive = false;
+        filterInputs.forEach(input => {
+            if (input.value && input.value !== '') { 
+                filtersActive = true;
+            }
+        });
+
+        if (filtersActive) {
+            new bootstrap.Collapse(filterCollapse, {
+                toggle: true
+            });
+        }
     });
 </script>
 @endsection

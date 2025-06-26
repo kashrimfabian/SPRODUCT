@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <h4 class="text-center text-dark text-uppercase mb-4">
-            mafuta sales records
+            Mafuta Sales Records
         </h4>
     </div>
 
@@ -16,91 +16,90 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="row mb-3">
-
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.index') }}" class="btn btn-info w-100 w-md-auto">
-                All Sales
-            </a>
+    {{-- Navigation and Action Buttons --}}
+    <div class="row mb-3 align-items-center justify-content-between">
+        <div class="col-auto mb-2 mb-md-0">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('mauzo.index') }}" class="btn btn-info">
+                    All Sales
+                </a>
+                <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-primary">
+                    Mafuta Sales
+                </a>
+                <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary">
+                    Mashudu Sales
+                </a>
+                <a href="{{ route('mauzo.ugido_summary') }}" class="btn btn-warning">
+                    Ugido Sales
+                </a>
+                <a href="{{ route('mauzo.lami_summary') }}" class="btn btn-dark">
+                    Lami Sales
+                </a>
+            </div>
         </div>
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-primary w-100 w-md-auto">
-                Mafuta Summary
-            </a>
-        </div>
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.mashudu_summary') }}" class="btn btn-secondary w-100 w-md-auto">
-                Mashudu Summary
-            </a>
-        </div>
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.ugido_summary') }}" class="btn btn-warning w-100 w-md-auto">
-                Ugido Summary
-            </a>
-        </div>
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.lami_summary') }}" class="btn btn-dark w-100 w-md-auto">
-                Lami Summary
-            </a>
-        </div>
-        <div class="col-12 col-md-auto mb-3">
-            <a href="{{ route('mauzo.create') }}" class="btn btn-success w-100 w-md-auto">
-                <i class="fas fa-plus"></i> Add New Mauzo
-            </a>
+        <div class="col-auto">
+            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                <a href="{{ route('mauzo.create') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add New Mauzo
+                </a>
+                {{-- Button to toggle the filter collapse --}}
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="fas fa-filter"></i> Filter Sales
+                </button>
+            </div>
         </div>
     </div>
 
-    {{-- Filter Form --}}
-    <form action="{{ route('mauzo.mafuta_summary') }}" method="GET" class="row gx-2 gy-2 align-items-center mb-3">
-        {{-- Form action points to its own route --}}
-        <div class="col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-filter"></i></span>
-                <select name="alizeti_id" id="alizeti_id" class="form-select">
-                    <option value="">All Batches</option>
-                    @foreach($alizeti as $batch)
-                    <option value="{{ $batch->ali_id }}"
-                        {{ request('alizeti_id') == $batch->ali_id ? 'selected' : '' }}>
-                        {{ $batch->batch_no }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <div class="col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                <input type="date" name="start_date" id="start_date" class="form-control datepicker"
-                    value="{{ request('start_date') }}" placeholder="Start Date">
-            </div>
-        </div>
-        <div class="col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                <input type="date" name="end_date" id="end_date" class="form-control datepicker"
-                    value="{{ request('end_date') }}" placeholder="End Date">
-            </div>
-        </div>
-        <div class="col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-money-bill-alt"></i></span>
-                <select name="payment_id" id="payment_id" class="form-select">
-                    <option value="">All Payment Ways</option>
-                    @foreach($paymentMethods as $method)
-                    <option value="{{ $method->id }}" {{ request('payment_id') == $method->id ? 'selected' : '' }}>
-                        {{ $method->method_name }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
+    {{-- Filter Form (Collapsible) --}}
+    <div class="collapse mb-4" id="filterCollapse">
+        <div class="card card-body shadow-sm">
+            <form action="{{ route('mauzo.mafuta_summary') }}" method="GET">
+                {{-- Form action points to its own route --}}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="alizeti_id" class="form-label">Alizeti Batch</label>
+                        <select name="alizeti_id" id="alizeti_id" class="form-select">
+                            <option value="">All Batches</option>
+                            @foreach($alizeti as $batch)
+                            <option value="{{ $batch->ali_id }}"
+                                {{ request('alizeti_id') == $batch->ali_id ? 'selected' : '' }}>
+                                {{ $batch->batch_no }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control datepicker"
+                            value="{{ request('start_date') }}" placeholder="Start Date">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" name="end_date" id="end_date" class="form-control datepicker"
+                            value="{{ request('end_date') }}" placeholder="End Date">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="payment_method_id" class="form-label">Payment Method</label>
+                        <select name="payment_id" id="payment_method_id" class="form-select">
+                            <option value="">All Payment Ways</option>
+                            @foreach($paymentMethods as $method)
+                            {{-- Corrected comparison for payment_id --}}
+                            <option value="{{ $method->payment_id }}" {{ request('payment_id') == $method->payment_id ? 'selected' : '' }}>
+                                {{ $method->name }} {{-- Displaying name, comparing ID --}}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-        <div class="col-md-auto">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-            <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-secondary"><i class="fas fa-undo"></i>
-                Reset</a> {{-- Reset button points to its own route --}}
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+                        <a href="{{ route('mauzo.mafuta_summary') }}" class="btn btn-warning"><i class="fas fa-undo"></i>
+                            Reset</a> {{-- Reset button points to its own route --}}
+                    </div>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -126,16 +125,16 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $sale->user->first_name ?? '' }} {{ $sale->user->last_name ?? '' }}</td>
                     <td>{{ $sale->tarehe }}</td>
-                    <td>{{ $sale->alizeti->batch_no  }}</td>
-                    <td>{{ $sale->product->name}}</td>
+                    <td>{{ $sale->alizeti->batch_no ?? 'N/A' }}</td>
+                    <td>{{ $sale->product->name ?? 'N/A' }}</td> {{-- Changed product_name to name --}}
                     <td>{{ number_format($sale->quantity, 2) }}</td>
                     <td>{{ number_format($sale->price, 0) }}</td>
                     <td>{{ number_format($sale->discount, 0) }}</td>
                     <td>{{ number_format($sale->total_price, 0) }}</td>
-                    <td>{{ $sale->paymentMethod->name }}</td>
+                    <td>{{ $sale->paymentMethod->name ?? 'N/A' }}</td> {{-- Changed payment->method_name to paymentMethod->name --}}
                     <td>
                         @if ($sale->is_confirmed)
-                        <span class="badge bg-success">sold</span>
+                        <span class="badge bg-success">Sold</span>
                         @else
                         <span class="badge bg-warning text-dark">Pending</span>
                         @endif
@@ -186,11 +185,13 @@
         </table>
     </div>
 
+    {{-- No pagination links as per request to use ->get() --}}
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // SweetAlert for Delete confirmation
     const deleteForms = document.querySelectorAll('.delete-form');
     deleteForms.forEach(form => {
         const deleteButton = form.querySelector('.delete-btn');
@@ -202,7 +203,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Yes, delete it!',
+                allowOutsideClick: false,
             }).then((result) => {
                 if (result.isConfirmed) {
                     this.closest('form').submit();
@@ -211,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // SweetAlert for Confirm confirmation
     const confirmForms = document.querySelectorAll('.confirm-form');
     confirmForms.forEach(form => {
         const confirmButton = form.querySelector('.confirm-btn');
@@ -230,6 +233,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // --- JavaScript for Filter Collapse ---
+    const filterCollapseElement = document.getElementById('filterCollapse');
+    // Select all form controls within the collapse that are used for filtering
+    const filterInputs = filterCollapseElement.querySelectorAll('select, input[type="date"]'); 
+    
+    let filtersActive = false;
+    filterInputs.forEach(input => {
+        // Check if the input has a value and it's not a default/empty option
+        if (input.value && input.value !== '' && input.value !== '0' && input.value !== 'All') {
+            filtersActive = true;
+        }
+    });
+
+    // If any filters are active, ensure the collapse is shown on page load
+    if (filtersActive) {
+        // Use Bootstrap's Collapse JavaScript API to show the element
+        // This assumes Bootstrap's JS is loaded (usually via layouts.appw)
+        const collapseInstance = new bootstrap.Collapse(filterCollapseElement, {
+            toggle: false // Do not toggle, just control explicitly
+        });
+        collapseInstance.show(); // Programmatically show the collapse div
+    }
 });
 </script>
 @endsection

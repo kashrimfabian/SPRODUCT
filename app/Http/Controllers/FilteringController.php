@@ -11,15 +11,47 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class FilteringController extends Controller
-{
-   
-    public function index()
+{   
+    
+    public function index(Request $request)
     {
-        
-        $filteringOperations = Filtering::with(['custAlizeti.customer', 'user'])->latest('tarehe')->paginate(10);
-        return view('filtering.index', compact('filteringOperations')); 
-    }
+       
+        $query = Filtering::with(['custAlizeti.customer', 'user']);
 
+        
+        if ($request->filled('start_date')) {
+            $query->where('tarehe', '>=', $request->input('start_date'));
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->where('tarehe', '<=', $request->input('end_date'));
+        }
+
+        
+        if ($request->filled('cust_ali_id')) {
+            $query->where('cust_ali_id', $request->input('cust_ali_id'));
+        }
+
+        
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->input('user_id'));
+        }
+
+        
+        $query->orderBy('tarehe', 'desc');
+        
+        $filteringOperations = $query->paginate(10); 
+        $custAlizetiBatches = CustAlizeti::with('customer')->orderBy('batch_no')->get(); 
+        
+        $users = User::orderBy('first_name')->get();   
+
+       
+        return view('filtering.index', compact(
+            'filteringOperations',     
+            'custAlizetiBatches', 
+            'users'                    
+        ));
+    }
     
     public function create()
     {
@@ -89,28 +121,24 @@ class FilteringController extends Controller
     }
 
     
-    public function show(Filtering $filtering) // Variable name matches route parameter for binding, updated model name
+    public function show(Filtering $filtering) 
     {
         $filtering->load(['custAlizeti.customer', 'custAlizeti.customerStock', 'user']);
-        return view('filtering.show', compact('filtering')); // Updated view path
+        return view('filtering.show', compact('filtering'));
     }
 
-    /**
-     * Show the form for editing the specified filtering operation.
-     */
-    public function edit(Filtering $filtering) // Updated model name
+    
+    public function edit(Filtering $filtering) 
     {
         $filtering->load(['custAlizeti.customer', 'custAlizeti.customerStock', 'user']);
         $availableCustAlizetiBatches = CustAlizeti::with('customerStock')->get();
         $users = User::all();
 
-        return view('filtering.edit', compact('filtering', 'availableCustAlizetiBatches', 'users')); // Updated view path
+        return view('filtering.edit', compact('filtering', 'availableCustAlizetiBatches', 'users')); 
     }
 
-    /**
-     * Update the specified filtering operation in storage and adjust customer stock.
-     */
-    public function update(Request $request, Filtering $filtering) // Updated model name
+    
+    public function update(Request $request, Filtering $filtering) 
     {
         $validated = $request->validate([
             'cust_ali_id' => 'required|exists:cust_alizeti,cust_ali_id',
@@ -125,14 +153,14 @@ class FilteringController extends Controller
             'cost_used' => 'required|numeric|min:0',
         ]);
 
-        // Capture original values from Filtering record for stock reversal
-        $originalCrudeOilInputLtr = $filtering->crude_oil; // Field name updated
-        $originalRefinedOilOutputLtr = $filtering->refined_oil; // Field name updated
-        $originalLamiOutputKg = $filtering->lami_kg;       // Field name updated
-        $originalUgidoOutputKg = $filtering->ugido_kg;     // Field name updated
+        
+        $originalCrudeOilInputLtr = $filtering->crude_oil; 
+        $originalRefinedOilOutputLtr = $filtering->refined_oil; 
+        $originalLamiOutputKg = $filtering->lami_kg;      
+        $originalUgidoOutputKg = $filtering->ugido_kg;     
         $originalCustAliId = $filtering->cust_ali_id;
 
-        // Calculate unit_used for the update
+
         if ($validated['initial_units'] !== null && $validated['final_units'] !== null) {
             if ($validated['initial_units'] <= $validated['final_units']) {
                 return back()->withInput()->with('error', 'Initial Electricity Unit must be greater than Final Electricity Unit.');
@@ -146,8 +174,7 @@ class FilteringController extends Controller
             $validated['unit_used'] = null;
         }
 
-        // --- Stock Adjustment Logic ---
-        // 1. Revert original changes from the OLD batch's CustomerStock
+       
         $oldCustAlizetiBatch = CustAlizeti::with('customerStock')->findOrFail($originalCustAliId);
         $oldCustomerStock = $oldCustAlizetiBatch->customerStock;
 
@@ -166,12 +193,12 @@ class FilteringController extends Controller
             return back()->withInput()->with('error', "Original customer stock record for batch ID {$originalCustAliId} not found during update.");
         }
 
-        // 2. Apply new changes to the CURRENT (potentially new) batch's CustomerStock
+
         $currentCustAlizetiBatch = CustAlizeti::with('customerStock')->findOrFail($validated['cust_ali_id']);
         $currentCustomerStock = $currentCustAlizetiBatch->customerStock;
 
         if (!$currentCustomerStock) {
-            // Revert the reversion (restore old stock to its state before this update attempt)
+            
             $oldCustomerStock->crude_oil -= $originalCrudeOilInputLtr;
             $oldCustomerStock->refined_oil += $originalRefinedOilOutputLtr;
             $oldCustomerStock->lami_kg += $originalLamiOutputKg;
@@ -180,9 +207,9 @@ class FilteringController extends Controller
             return back()->withInput()->with('error', "Target customer stock record for batch ID {$validated['cust_ali_id']} not found during update.");
         }
 
-        // Check if enough crude oil stock is available in the CURRENT batch for the NEW input
+        
         if ($currentCustomerStock->crude_oil < $validated['crude_oil']) {
-            // Revert the old stock changes again if the new input isn't valid for the new batch
+           
             $oldCustomerStock->crude_oil -= $originalCrudeOilInputLtr;
             $oldCustomerStock->refined_oil += $originalRefinedOilOutputLtr;
             $oldCustomerStock->lami_kg += $originalLamiOutputKg;
@@ -197,27 +224,25 @@ class FilteringController extends Controller
         $currentCustomerStock->ugido_kg += $validated['ugido_kg'];
         $currentCustomerStock->save();
 
-        // Update the Filtering record itself
-        $filtering->update($validated); // Updated model name
+
+        $filtering->update($validated);
 
         return redirect()->route('filtering.index')->with('success', 'Filtering operation updated and customer stock adjusted successfully!'); // Updated route name
     }
 
-    /**
-     * Remove the specified filtering operation from storage and revert customer stock.
-     */
-    public function destroy(Filtering $filtering) // Updated model name
+    
+    public function destroy(Filtering $filtering)
     {
-        // Load the associated CustAlizeti batch and its CustomerStock record
+        
         $filtering->load(['custAlizeti.customerStock']);
         $customerStock = $filtering->custAlizeti->customerStock;
 
         if ($customerStock) {
-            // Revert stock changes:
-            $customerStock->crude_oil += $filtering->crude_oil; // Field name updated
-            $customerStock->refined_oil -= $filtering->refined_oil; // Field name updated
-            $customerStock->lami_kg -= $filtering->lami_kg;       // Field name updated
-            $customerStock->ugido_kg -= $filtering->ugido_kg;     // Field name updated
+
+            $customerStock->crude_oil += $filtering->crude_oil; 
+            $customerStock->refined_oil -= $filtering->refined_oil; 
+            $customerStock->lami_kg -= $filtering->lami_kg;       
+            $customerStock->ugido_kg -= $filtering->ugido_kg;
 
             if ($customerStock->crude_oil < 0) $customerStock->crude_oil = 0;
             if ($customerStock->refined_oil < 0) $customerStock->refined_oil = 0;
@@ -228,8 +253,8 @@ class FilteringController extends Controller
             return back()->with('error', "Customer stock record for batch ID {$filtering->cust_ali_id} missing. Cannot revert stock.");
         }
 
-        // Delete the Filtering record
-        $filtering->delete(); // Updated model name
+        
+        $filtering->delete(); 
 
         return redirect()->route('filtering.index')->with('success', 'Filtering operation deleted and customer stock reversed.'); // Updated route name
     }

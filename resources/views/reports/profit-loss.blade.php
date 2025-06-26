@@ -27,7 +27,6 @@
             <div class="input-group">
                 <select class="form-control" id="export_type" onchange="exportReport()">
                     <option value="">Select file format</option>
-                    <option value="csv">CSV</option>
                     <option value="excel">Excel</option>
                     <option value="pdf">PDF</option>
                 </select>
@@ -35,6 +34,7 @@
             </div>
         </div>
         <div class="col-md-auto">
+            {{-- This link will be triggered programmatically by JavaScript --}}
             <a id="export_link" href="#" class="btn btn-success" style="display: none;">Export</a>
         </div>
     </form>
@@ -70,27 +70,25 @@
                                     <th>Total Sales (TZS)</th>
                                     <th>Total Expenses (TZS)</th>
                                     <th>Total Alizeti Cost (TZS)</th>
-                                    <th>Total Filtering Cost (TZS)</th> {{-- NEW COLUMN HEADER --}}
+                                    <th>Total Filtering Revenue (TZS)</th>
                                     <th>Profit/Loss (TZS)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
-                                    $overallProfitLoss = 0; // This will be calculated from daily data
+                                    $overallProfitLoss = 0;
                                 @endphp
                                 @foreach ($reportData as $data)
                                     @php
-                                        // Ensure daily_profit_loss is calculated here or passed directly
-                                        // The controller passes 'daily_profit_loss', so we can use that directly
-                                        $dailyProfitLoss = $data['daily_profit_loss'] ?? ($data['total_sales'] - $data['total_expenses'] - $data['total_alizeti_cost'] - ($data['total_filtering_cost'] ?? 0));
+                                        $dailyProfitLoss = ($data['total_sales'] ?? 0) - ($data['total_expenses'] ?? 0) - ($data['total_alizeti_cost'] ?? 0) + ($data['total_filtering_revenue'] ?? 0);
                                         $overallProfitLoss += $dailyProfitLoss;
                                     @endphp
                                 <tr>
                                     <td>{{ $data['date'] }}</td>
-                                    <td>{{ number_format($data['total_sales'], 2) }}</td>
-                                    <td>{{ number_format($data['total_expenses'], 2) }}</td>
-                                    <td>{{ number_format($data['total_alizeti_cost'], 2) }}</td>
-                                    <td>{{ number_format($data['total_filtering_cost'] ?? 0, 2) }}</td> {{-- NEW COLUMN DATA --}}
+                                    <td>{{ number_format($data['total_sales'] ?? 0, 2) }}</td>
+                                    <td>{{ number_format($data['total_expenses'] ?? 0, 2) }}</td>
+                                    <td>{{ number_format($data['total_alizeti_cost'] ?? 0, 2) }}</td>
+                                    <td>{{ number_format($data['total_filtering_revenue'] ?? 0, 2) }}</td>
                                     <td class="{{ $dailyProfitLoss >= 0 ? 'text-success' : 'text-danger' }}">
                                         {{ number_format($dailyProfitLoss, 2) }}
                                     </td>
@@ -100,12 +98,12 @@
                             <tfoot>
                                 <tr>
                                     <th>Total</th>
-                                    <th>{{ number_format($totalSales, 2) }}</th>
-                                    <th>{{ number_format($totalExpenses, 2) }}</th>
-                                    <th>{{ number_format($totalAlizetiCost, 2) }}</th>
-                                    <th>{{ number_format($totalFilteringCost ?? 0, 2) }}</th> {{-- NEW COLUMN FOOTER TOTAL --}}
+                                    <th>{{ number_format($totalSales ?? 0, 2) }}</th>
+                                    <th>{{ number_format($totalExpenses ?? 0, 2) }}</th>
+                                    <th>{{ number_format($totalAlizetiCost ?? 0, 2) }}</th>
+                                    <th>{{ number_format($totalFilteringRevenue ?? 0, 2) }}</th>
                                     <th class="{{ ($overallProfitLoss ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                        {{ number_format($overallProfitLoss ?? 0, 2) }}
+                                        {{ number_format($overallProfitLoss, 2) }}
                                     </th>
                                 </tr>
                             </tfoot>
@@ -133,37 +131,57 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const exportLink = document.getElementById('export_link');
-    exportLink.style.display = 'none';
+    exportLink.style.display = 'none'; 
 
     const resetButton = document.getElementById('reset_button');
     resetButton.addEventListener('click', function() {
         window.location.href = "{{ route('reports.profit_loss') }}";
     });
 
-    // The preset buttons logic seems to be missing from your provided HTML,
-    // but if you re-add them, this script will make them functional.
-    // const presetButtons = document.querySelectorAll('.flatpickr-preset');
-    // presetButtons.forEach(button => {
-    //     button.addEventListener('click', function() {
-    //         document.getElementById('start_date').value = this.dataset.start;
-    //         document.getElementById('end_date').value = this.dataset.end;
-    //         document.querySelector('form').submit();
-    //     });
-    // });
+    
 });
 
 function exportReport() {
     const exportType = document.getElementById("export_type").value;
     const startDate = document.getElementById("start_date").value;
     const endDate = document.getElementById("end_date").value;
-    const exportLink = document.getElementById("export_link");
+    const exportLink = document.getElementById("export_link"); 
 
-    if (exportType) {
-        exportLink.href = "{{ route('reports.profit_loss.export') }}?type=" + exportType + "&start_date=" + startDate +
-            "&end_date=" + endDate;
-        exportLink.style.display = "inline-block";
-    } else {
+    if (!exportType) {
+        
         exportLink.style.display = "none";
+        return;
+    }
+
+    const exportUrl = "{{ route('reports.profit_loss.export') }}?type=" + exportType + "&start_date=" + startDate + "&end_date=" + endDate;
+
+    if (exportType === 'excel' || exportType === 'pdf') {
+        Swal.fire({
+            title: 'Confirm Export',
+            text: `Are you sure you want to export this report as ${exportType.toUpperCase()}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, export it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                
+                exportLink.href = exportUrl; 
+                exportLink.click(); 
+                exportLink.style.display = "none";
+                document.getElementById("export_type").value = ""; 
+            } else {
+
+                exportLink.style.display = "none";
+                document.getElementById("export_type").value = "";
+            }
+        });
+    } else {
+        
+        exportLink.href = exportUrl;
+        exportLink.style.display = "inline-block"; 
+        
     }
 }
 </script>

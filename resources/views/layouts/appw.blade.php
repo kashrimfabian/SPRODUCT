@@ -254,6 +254,21 @@
                 </ul>
             </li>
             <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#customers-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-receipt-cutoff"></i><span>Customers</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="customers-nav" class="nav-content collapse">
+                    <li>
+                        <a href="{{ route('customers.index') }}">
+                            <i class="bi bi-circle"></i><span>registration</span>
+                        </a>
+                        <a href="{{ route('customers.index') }}">
+                            <i class="bi bi-trash2-fill"></i><span>registration</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link collapsed" data-bs-target="#debt-loans-nav" data-bs-toggle="collapse" href="#">
                     <i class="bi bi-receipt-cutoff"></i><span>Credit-Loans</span><i
                         class="bi bi-chevron-down ms-auto"></i>

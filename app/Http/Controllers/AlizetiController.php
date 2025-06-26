@@ -48,7 +48,7 @@ class AlizetiController extends Controller
 
     return view('alizeti.summary', compact('alizetiSummary', 'uniqueBatches'));
 }
-    // Display a listing of the resource
+   
     public function index(Request $request)
     {
         $alizetiQuery = Alizeti::with('user','uzalishajiz','mauzo')->latest();
@@ -74,7 +74,7 @@ class AlizetiController extends Controller
         return view('alizeti.index', compact('alizeti', 'uniqueBatches'));
     }
 
-    // Show the form for creating a new resource
+    
     public function create()
     {
         return view('alizeti.create');
@@ -105,33 +105,29 @@ class AlizetiController extends Controller
 
     public function store(Request $request)
     {
-        // Validate the request (excluding batch_no)
+       
         $request->validate([
             'tarehe' => 'required|date',
             'al_kilogram' => 'required|numeric|min:0',
             'gunia_total' => 'required|integer|min:0',
             'price_per_kilo' => 'required|numeric|min:0',
-            'batch_no' => 'required|unique:alizeti,batch_no', // Added batch_no validation
+            'batch_no' => 'required|unique:alizeti,batch_no', 
         ]);
 
         try {
             DB::beginTransaction();
-
-            // Calculate the total price
-            $totalPrice = $request->al_kilogram * $request->price_per_kilo;
-
-            // Create a new record
+           
+            $totalPrice = $request->al_kilogram * $request->price_per_kilo;            
             $alizeti = Alizeti::create([
                 'tarehe' => $request->tarehe,
                 'user_id' => Auth::id(),
-                'batch_no' => $request->batch_no, // Use the generated batch_no from the request
+                'batch_no' => $request->batch_no,
                 'al_kilogram' => $request->al_kilogram,
                 'gunia_total' => $request->gunia_total,
                 'price_per_kilo' => $request->price_per_kilo,
                 'total_price' => $totalPrice,
             ]);
-
-            // Find or create the stock record
+            
             $stock = Stock::where('alizeti_id', $alizeti->ali_id)->first();
 
             if ($stock) {
@@ -156,23 +152,20 @@ class AlizetiController extends Controller
             return redirect()->back()->with('error', 'An error occurred while adding the record.');
         }
     }
-
-    // Display the specified resource
+    
     public function show(Alizeti $alizeti)
     {
         return view('alizeti.show', compact('alizeti'));
     }
-
-    // Show the form for editing the specified resource
+    
     public function edit(Alizeti $alizeti)
     {
         return view('alizeti.edit', compact('alizeti'));
     }
-
-    // Update the specified resource in storage
+    
     public function update(Request $request, Alizeti $alizeti)
     {
-        // Validate the request for the fields you want to update
+        
         $request->validate([
             'al_kilogram' => 'required|numeric|min:0',
             'gunia_total' => 'required|integer|min:0',
@@ -182,25 +175,22 @@ class AlizetiController extends Controller
         try {
             DB::beginTransaction();
 
-            // Calculate the total price
             $totalPrice = $request->al_kilogram * $request->price_per_kilo;
 
-            // Get the old al_kilogram value
             $oldAlKilogram = $alizeti->al_kilogram;
 
-            // Update only the specified fields
+            
             $alizeti->update([
                 'al_kilogram' => $request->al_kilogram,
                 'gunia_total' => $request->gunia_total,
                 'price_per_kilo' => $request->price_per_kilo,
                 'total_price' => $totalPrice,
             ]);
-
-            // Find the corresponding stock record
+            
             $stock = Stock::where('alizeti_id', $alizeti->ali_id)->first();
 
             if ($stock) {
-                // Update the total_al_kgms in the stocks table
+
                 $stock->total_al_kgms = $stock->total_al_kgms - $oldAlKilogram + $request->al_kilogram;
                 $stock->save();
             } else {
@@ -217,8 +207,7 @@ class AlizetiController extends Controller
             return redirect()->back()->with('error', 'An error occurred while updating the record.');
         }
     }
-
-    // Remove the specified resource from storage
+   
     public function destroy(Alizeti $alizeti)
     {
         $alizeti->delete();
