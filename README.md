@@ -36,7 +36,7 @@ A view dedicated to summarizing sales reports and all costs specifically
 ### sales
 This section shows the records for product transactions (collections and sales) related to specific customer batches.
 
-![Product Transactions List](public/assets/images/sales.png)
+![Product Transactions List](public/assets/img/sales.png)
 
 
 -
